@@ -1,6 +1,6 @@
 {
-  "status": "paused",
-  "message": "التطبيق متوقف مؤقتاً، سيعود قريباً!",
+  "status": "active",
+  "message": "",
   "version": "1.0.0",
   "telegram": "https://t.me/ahrgq"
 }
