@@ -38,6 +38,13 @@ jobs:
       - name: Create android folder
         run: flutter create --platforms android .
 
+      - name: Add Internet Permission
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if ! grep -q "INTERNET" "$MANIFEST"; then
+            sed -i 's/<application/\n    <uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' "$MANIFEST"
+          fi
+
       - name: Build
         run: |
           TYPE="${{ github.event.inputs.build_type }}"
