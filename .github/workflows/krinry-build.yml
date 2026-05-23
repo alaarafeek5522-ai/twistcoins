@@ -53,18 +53,7 @@ jobs:
 
       - name: Patch build.gradle for NDK
         run: |
-          cat >> android/app/build.gradle << 'GRADLE'
-
-          android {
-              externalNativeBuild {
-                  cmake {
-                      path "src/main/cpp/CMakeLists.txt"
-                      version "3.22.1"
-                  }
-              }
-              ndkVersion "27.2.12479018"
-          }
-          GRADLE
+          sed -i '/^android {/a\    ndkVersion "27.2.12479018"\n    externalNativeBuild {\n        cmake {\n            path "src/main/cpp/CMakeLists.txt"\n            version "3.22.1"\n        }\n    }' android/app/build.gradle
 
       - name: Build
         run: |
