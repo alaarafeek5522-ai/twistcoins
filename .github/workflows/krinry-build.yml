@@ -51,9 +51,60 @@ jobs:
             sed -i 's/<application/\n    <uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' "$MANIFEST"
           fi
 
-      - name: Patch build.gradle for NDK
+      - name: Write build.gradle with NDK
         run: |
-          sed -i '/^android {/a\    ndkVersion "27.2.12479018"\n    externalNativeBuild {\n        cmake {\n            path "src/main/cpp/CMakeLists.txt"\n            version "3.22.1"\n        }\n    }' android/app/build.gradle
+          cat > android/app/build.gradle << 'GRADLE'
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace = "com.alaa.twistcoins"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion "27.2.12479018"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11
+    }
+
+    defaultConfig {
+        applicationId = "com.alaa.twistcoins"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = 1
+        versionName = "1.0.0"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+GRADLE
 
       - name: Build
         run: |
