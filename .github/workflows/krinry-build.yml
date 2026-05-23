@@ -6,7 +6,7 @@ on:
       build_type:
         description: 'Build type'
         required: true
-        default: 'debug'
+        default: 'release'
         type: choice
         options: [debug, profile, release]
       output_type:
@@ -27,6 +27,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          add-to-path: true
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.0'
@@ -44,6 +50,25 @@ jobs:
           if ! grep -q "INTERNET" "$MANIFEST"; then
             sed -i 's/<application/\n    <uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' "$MANIFEST"
           fi
+
+      - name: Copy native files
+        run: |
+          cp -r android/app/src/main/cpp android/app/src/main/cpp_guard || true
+
+      - name: Patch build.gradle for NDK
+        run: |
+          cat >> android/app/build.gradle << 'GRADLE'
+
+android {
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+    ndkVersion "27.2.12479018"
+}
+GRADLE
 
       - name: Build
         run: |
