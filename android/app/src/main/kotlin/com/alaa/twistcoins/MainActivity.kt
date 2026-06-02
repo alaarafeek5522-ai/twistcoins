@@ -23,7 +23,7 @@ class MainActivity : FlutterActivity() {
                         info.signatures?.firstOrNull()?.toByteArray()
                     }
                     if (sigBytes != null) {
-                        val md = java.security.MessageDigest.getInstance("SHA1")
+                        val md = java.security.MessageDigest.getInstance("SHA-256")
                         val digest = md.digest(sigBytes)
                         result.success(digest.joinToString(":") { "%02X".format(it) })
                     } else {
