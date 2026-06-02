@@ -15,12 +15,6 @@ on:
         default: 'apk'
         type: choice
         options: [apk, appbundle, apk-split]
-      target_platform:
-        description: 'Target platform'
-        required: false
-        default: 'all'
-        type: choice
-        options: [all, android-arm64, android-arm, android-x64]
 
 jobs:
   build:
@@ -38,23 +32,35 @@ jobs:
           flutter-version: '3.41.0'
           channel: 'stable'
 
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/twistcoins.jks
+
       - name: Pub get
         run: flutter pub get
 
       - name: Create android folder
         run: flutter create --platforms android .
 
+      - name: Move Keystore
+        run: |
+          cp android/app/twistcoins.jks android/app/twistcoins.jks || true
+
+      - name: Create key.properties
+        run: |
+          cat > android/key.properties << 'KEYEOF'
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=twistcoins.jks
+          KEYEOF
+
       - name: Build
         run: |
           TYPE="${{ github.event.inputs.build_type }}"
           OUT="${{ github.event.inputs.output_type }}"
-          PLAT="${{ github.event.inputs.target_platform }}"
           if [ "$OUT" = "apk" ]; then
-            if [ "$PLAT" != "all" ]; then
-              flutter build apk --$TYPE --target-platform $PLAT
-            else
-              flutter build apk --$TYPE
-            fi
+            flutter build apk --$TYPE
           elif [ "$OUT" = "apk-split" ]; then
             flutter build apk --$TYPE --split-per-abi
           elif [ "$OUT" = "appbundle" ]; then
