@@ -14,21 +14,21 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             if (call.method == "getSignature") {
                 try {
-                    val sig = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val sigBytes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
-                        val sigBytes = info.signingInfo.apkContentsSigners[0].toByteArray()
-                        val md = java.security.MessageDigest.getInstance("SHA1")
-                        val digest = md.digest(sigBytes)
-                        digest.joinToString(":") { "%02X".format(it) }
+                        info.signingInfo?.apkContentsSigners?.firstOrNull()?.toByteArray()
                     } else {
                         @Suppress("DEPRECATION")
                         val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-                        val sigBytes = info.signatures[0].toByteArray()
+                        info.signatures?.firstOrNull()?.toByteArray()
+                    }
+                    if (sigBytes != null) {
                         val md = java.security.MessageDigest.getInstance("SHA1")
                         val digest = md.digest(sigBytes)
-                        digest.joinToString(":") { "%02X".format(it) }
+                        result.success(digest.joinToString(":") { "%02X".format(it) })
+                    } else {
+                        result.error("ERROR", "No signature found", null)
                     }
-                    result.success(sig)
                 } catch (e: Exception) {
                     result.error("ERROR", e.message, null)
                 }
