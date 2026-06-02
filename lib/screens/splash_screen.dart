@@ -14,6 +14,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
+  String _debugMsg = '';
 
   @override
   void initState() {
@@ -30,21 +31,22 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     if (config != null) {
       final appConfig = AppConfig.fromJson(config);
-
-      // signature check
       final sig = await SecurityService.getSignature();
+
+      setState(() => _debugMsg = 'APK: ${sig ?? "NULL"}\nGist: ${appConfig.signature}');
+
+      await Future.delayed(const Duration(seconds: 3));
+
       if (sig != null && sig.isNotEmpty && sig != appConfig.signature) {
         if (mounted) await AppDialogs.showTampered(context);
         return;
       }
 
-      // stopped check
       if (!appConfig.active) {
         if (mounted) await AppDialogs.showStopped(context, appConfig.stopMessage);
         return;
       }
 
-      // update check
       if (appConfig.updateEnabled) {
         if (mounted) {
           await AppDialogs.showUpdate(
@@ -81,16 +83,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // outer glow
-                  Container(
-                    width: 240,
-                    height: 240,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.12), blurRadius: 60, spreadRadius: 20)],
-                    ),
-                  ),
-                  // spinning arc 1
                   AnimatedBuilder(
                     animation: _ctrl,
                     builder: (_, __) => Transform.rotate(
@@ -110,7 +102,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                     ),
                   ),
-                  // spinning arc 2 (reverse)
                   AnimatedBuilder(
                     animation: _ctrl,
                     builder: (_, __) => Transform.rotate(
@@ -130,19 +121,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                     ),
                   ),
-                  // dots ring
-                  AnimatedBuilder(
-                    animation: _ctrl,
-                    builder: (_, __) => Transform.rotate(
-                      angle: _ctrl.value * 3.14,
-                      child: SizedBox(
-                        width: 175,
-                        height: 175,
-                        child: CustomPaint(painter: _DotsPainter()),
-                      ),
-                    ),
-                  ),
-                  // center card
                   Container(
                     width: 155,
                     height: 155,
@@ -150,41 +128,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       shape: BoxShape.circle,
                       color: AppTheme.card,
                       border: Border.all(color: AppTheme.primary.withOpacity(0.6), width: 2),
-                      boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.2), blurRadius: 20, spreadRadius: 2)],
+                      boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.2), blurRadius: 20)],
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Team Ali',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.primary,
-                            letterSpacing: 1,
-                          ),
-                        ),
+                        Text('Team Ali', style: GoogleFonts.playfairDisplay(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                         const SizedBox(height: 5),
-                        Container(
-                          height: 1,
-                          width: 70,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [
-                              Colors.transparent,
-                              AppTheme.primary.withOpacity(0.6),
-                              Colors.transparent,
-                            ]),
-                          ),
-                        ),
+                        Container(height: 1, width: 70, color: AppTheme.primary.withOpacity(0.4)),
                         const SizedBox(height: 5),
-                        Text(
-                          'By developer Alaa',
-                          style: GoogleFonts.poppins(
-                            fontSize: 9,
-                            color: Colors.white38,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
+                        Text('By developer Alaa', style: GoogleFonts.poppins(fontSize: 9, color: Colors.white38)),
                       ],
                     ),
                   ),
@@ -192,64 +145,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               ),
             ).animate().scale(duration: 900.ms, curve: Curves.easeOut),
             const SizedBox(height: 44),
-            Text(
-              'Twist Coins',
-              style: GoogleFonts.playfairDisplay(
-                fontSize: 38,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.primary,
-                letterSpacing: 3,
-              ),
-            ).animate().fadeIn(delay: 400.ms, duration: 800.ms),
+            Text('Twist Coins', style: GoogleFonts.playfairDisplay(fontSize: 38, fontWeight: FontWeight.w800, color: AppTheme.primary, letterSpacing: 3)).animate().fadeIn(delay: 400.ms),
             const SizedBox(height: 6),
-            Text(
-              'احصل على مكافآتك بسهولة',
-              style: GoogleFonts.cairo(fontSize: 13, color: Colors.white30, letterSpacing: 1),
-            ).animate().fadeIn(delay: 700.ms, duration: 800.ms),
-            const SizedBox(height: 50),
-            SizedBox(
-              width: 120,
-              child: LinearProgressIndicator(
-                backgroundColor: AppTheme.cardBorder,
-                valueColor: const AlwaysStoppedAnimation(AppTheme.primary),
-                borderRadius: BorderRadius.circular(4),
+            Text('احصل على مكافآتك بسهولة', style: GoogleFonts.cairo(fontSize: 13, color: Colors.white30)).animate().fadeIn(delay: 700.ms),
+            const SizedBox(height: 20),
+            // debug
+            if (_debugMsg.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppTheme.card, borderRadius: BorderRadius.circular(10)),
+                child: Text(_debugMsg, style: const TextStyle(color: Colors.white54, fontSize: 10), textAlign: TextAlign.center),
               ),
-            ).animate().fadeIn(delay: 1000.ms),
           ],
         ),
       ),
     );
   }
-}
-
-class _DotsPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = AppTheme.primary.withOpacity(0.5)..style = PaintingStyle.fill;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    for (int i = 0; i < 12; i++) {
-      final angle = (i * 30) * 3.14159 / 180;
-      final x = center.dx + radius * 0.92 * (angle - angle + 1) * (i % 2 == 0 ? 1 : 0.7) * (angle.isNaN ? 0 : (i * 0.5 % 1));
-      final dotX = center.dx + radius * 0.92 * _cos(angle);
-      final dotY = center.dy + radius * 0.92 * _sin(angle);
-      canvas.drawCircle(Offset(dotX, dotY), i % 3 == 0 ? 3 : 2, paint);
-    }
-  }
-
-  double _cos(double a) => (a - a.truncate() + 1) * 0 + _approxCos(a);
-  double _sin(double a) => _approxSin(a);
-
-  double _approxCos(double a) {
-    double x = a % (2 * 3.14159);
-    return 1 - x * x / 2 + x * x * x * x / 24 - x * x * x * x * x * x / 720;
-  }
-
-  double _approxSin(double a) {
-    double x = a % (2 * 3.14159);
-    return x - x * x * x / 6 + x * x * x * x * x / 120;
-  }
-
-  @override
-  bool shouldRepaint(_) => true;
 }
