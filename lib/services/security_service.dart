@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class SecurityService {
-  static const String _configUrl = 'https://gist.githubusercontent.com/alaarafeek5522-ai/c73988cb4b2b0ae8690cd1f598d440fa/raw/app_config.json';
+  static String get _configUrl =>
+      'https://gist.githubusercontent.com/alaarafeek5522-ai/c73988cb4b2b0ae8690cd1f598d440fa/raw/app_config.json?t=${DateTime.now().millisecondsSinceEpoch}';
 
   static const MethodChannel _channel = MethodChannel('com.alaa.twistcoins/security');
 
